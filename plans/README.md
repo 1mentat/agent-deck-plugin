@@ -7,6 +7,8 @@ trajectory records, not substitutes for current behavior, architecture, or tests
   read-only Agent Deck implementation.
 - [`add-ssh-session-monitoring.md`](add-ssh-session-monitoring.md) records local and SSH source
   aggregation.
+- [`build-interactive-agent-dashboard.md`](build-interactive-agent-dashboard.md) records the
+  coordinated fleet and session-detail dashboard.
 
 For current user behavior, read [`README.md`](../README.md). For module ownership and security
 boundaries, read [`ARCHITECTURE.md`](../ARCHITECTURE.md).

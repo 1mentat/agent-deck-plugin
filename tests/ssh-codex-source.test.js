@@ -48,7 +48,7 @@ function fakeSpawn(response) {
 
 function envelope(overrides = {}) {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     provider: 'codex',
     scannedAt: 1000,
     agents: [
@@ -65,6 +65,28 @@ function envelope(overrides = {}) {
         statusSince: 900,
         lastActivityAt: 950,
         isSubagent: false,
+        context: {
+          usedTokens: 50,
+          windowTokens: 100,
+          percent: 50,
+          cumulativeTokens: 80,
+          compactions: 0,
+        },
+        terminals: {
+          running: 1,
+          fidelity: 'inferred',
+          entries: [{ label: 'TEST', startedAt: 925 }],
+        },
+        subagents: { total: 0, active: 0, waiting: 0, done: 0, children: [] },
+        activity: { kind: 'terminal', label: 'RUNNING COMMAND', since: 940 },
+        plan: { completed: 1, total: 2, current: 'Verify' },
+        permissions: {
+          approval: 'on-request',
+          reviewer: '',
+          profile: 'workspace-write',
+          sandbox: '',
+        },
+        git: { branch: 'feature/test' },
       },
     ],
     warnings: [],
@@ -120,6 +142,7 @@ test('passes a validated alias as one SSH argument and streams the probe', async
   assert.equal(result.agents[0].id, 'ssh:fixture-host:thread-1');
   assert.equal(result.agents[0].sourceLabel, 'fixture-host');
   assert.equal(result.agents[0].statusSince, 900);
+  assert.equal(result.agents[0].terminals.entries[0].startedAt, 925);
 });
 
 test('rejects an invalid alias before reading or spawning', async () => {
@@ -133,7 +156,7 @@ test('maps malformed, incompatible, and missing-Node responses', async (t) => {
   const probePath = await probeFixture(t);
   for (const [response, expected] of [
     [{ stdout: '{broken', code: 0 }, 'PROBE_PROTOCOL'],
-    [{ stdout: JSON.stringify(envelope({ schemaVersion: 2 })), code: 0 }, 'PROBE_PROTOCOL'],
+    [{ stdout: JSON.stringify(envelope({ schemaVersion: 3 })), code: 0 }, 'PROBE_PROTOCOL'],
     [{ stderr: 'sh: node: command not found', code: 127 }, 'NODE_UNAVAILABLE'],
     [{ stderr: 'Host key verification failed.', code: 255 }, 'HOST_KEY_REQUIRED'],
   ]) {
@@ -191,4 +214,6 @@ test('corrects remote clock skew using the request midpoint', async (t) => {
   const result = await source.scan();
   assert.equal(result.agents[0].statusSince, -3000);
   assert.equal(result.agents[0].lastActivityAt, -2950);
+  assert.equal(result.agents[0].activity.since, -2960);
+  assert.equal(result.agents[0].terminals.entries[0].startedAt, -2975);
 });

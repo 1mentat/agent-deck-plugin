@@ -4,13 +4,16 @@ Agent Deck is a read-only Ulanzi Studio plugin that turns D200X keys into an amb
 Codex work on this Mac, a configured SSH host, or both together. It observes Codex session state
 without changing Codex configuration or sending anything to a running agent.
 
-The first release includes four actions:
+Agent Deck includes five actions:
 
 - **Overview** shows active, waiting, and recently completed counts.
 - **Needs You** latches the highest-priority explicit input or elevated-permission request.
 - **Agent Slot** shows one ranked agent or subagent with project, task, reasoning effort, status,
   and age.
 - **Recent Completion** shows the latest completed task.
+- **Dashboard Tile** fills one position in a coordinated fleet-and-detail page. Pressing an agent
+  tile selects that exact session and changes every tile on the page to show its context pressure,
+  observed terminals, subagents, activity, plan, model, permissions, and source.
 
 ## Build and install
 
@@ -63,6 +66,41 @@ For multiple Agent Slot keys, select each key and set its ranked position and op
 filter. A slot always labels the source host of its current agent. If SSH is unavailable, the key
 shows an offline or diagnostic state while local agents remain visible in **All sources**.
 
+## Configure a dedicated dashboard page
+
+Create or choose one otherwise empty D200X page in Ulanzi Studio. Drag **Dashboard Tile** into all
+13 usable key positions. Studio reserves the bottom-right two-cell region for its wide background
+display, so the intended fleet grid is:
+
+    FLEET       NEEDS YOU    CONTEXT      TERMINALS    SCOPE
+    AGENT 1     AGENT 2      AGENT 3      AGENT 4     AGENT 5
+    AGENT 6     AGENT 7      AGENT 8      [Studio wide background]
+
+Dashboard Tile determines its role from its physical position; there is no per-key role picker.
+Configure any visible Dashboard Tile to set the group, scope, optional SSH alias, optional project
+filter, context warning threshold, and whether sanitized task text may appear on keys. Agent Deck
+copies those settings to the other visible tiles in the group so the page remains consistent after
+Studio restarts. Leave the group as `main` for one page.
+
+In fleet mode, press **Needs You**, **Context**, or **Terminals** to filter the ranked Agent keys;
+press the same metric again or press **Fleet** to clear the filter. Press **Scope** to cycle only
+among the local and SSH sources already configured for that page. Press an Agent key to pin that
+exact session and enter detail mode:
+
+    BACK        IDENTITY     CONTEXT      TERMINALS    SUBAGENTS
+    TASK        ACTIVITY     PLAN/MODEL   SOURCE       RUNTIME
+    PREVIOUS    PIN/FOLLOW   NEXT         [Studio wide background]
+
+In detail mode, Terminals and Subagents cycle their bounded entries. Previous and Next select
+another visible agent, Pin/Follow chooses stable identity versus following the selected rank, and
+Back returns to fleet mode. These presses change only Agent Deck's local display state.
+
+The Context tile shows the latest recorded model request's input tokens divided by its context
+window. This is intentionally different from cumulative token usage across the thread. Terminal
+counts carry a trailing `~` because passive Codex logs can prove that Agent Deck observed a running
+handle but cannot prove that an independently owned process is still alive. Command arguments,
+terminal output, full session IDs, and full paths are never rendered.
+
 ## Development
 
 Start with [`AGENTS.md`](AGENTS.md) for the working loop and [`ARCHITECTURE.md`](ARCHITECTURE.md)
@@ -82,6 +120,10 @@ is **Working**. An old open task becomes **Quiet**, because passive session file
 whether a different Codex CLI process is still computing or has been abandoned. A future opt-in
 shared app-server mode can provide exact runtime flags while keeping this passive mode as the
 zero-configuration default.
+
+Context usage, compaction events, parent-child relationships, model, effort, permissions, branch,
+and persisted plan/tool activity are recorded session facts but can be delayed by the normal poll
+interval. Background-terminal liveness remains inferred in passive mode and is marked with `~`.
 
 ## License
 

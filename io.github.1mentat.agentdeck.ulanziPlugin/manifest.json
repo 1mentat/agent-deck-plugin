@@ -3,7 +3,7 @@
   "Name": "Agent Deck",
   "Description": "A read-only mission control view of local and SSH-hosted Codex threads, subagents, reasoning effort, recent completions, and requests that need you.",
   "Author": "James Burns",
-  "Version": "0.1.0",
+  "Version": "0.2.0",
   "Icon": "resources/plugin.svg",
   "Category": "Developer Tools",
   "CategoryIcon": "resources/plugin.svg",
@@ -49,6 +49,16 @@
       "PropertyInspectorPath": "property-inspector/inspector.html",
       "UUID": "io.github.1mentat.agentdeck.ulanzi.recent",
       "States": [{ "Image": "resources/recent.svg" }],
+      "SupportedInMultiActions": false,
+      "Controllers": ["Keypad"]
+    },
+    {
+      "Name": "Dashboard Tile",
+      "Tooltip": "Fills one position in a coordinated Agent Deck fleet and session-detail page.",
+      "Icon": "resources/plugin.svg",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "io.github.1mentat.agentdeck.ulanzi.dashboard",
+      "States": [{ "Image": "resources/plugin.svg" }],
       "SupportedInMultiActions": false,
       "Controllers": ["Keypad"]
     }

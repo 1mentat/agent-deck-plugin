@@ -1,7 +1,7 @@
 import process from 'node:process';
 import { createCodexObserver } from './codex-observer.js';
 
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 const MAX_WARNINGS = 20;
 const MAX_WARNING_LENGTH = 300;
 
@@ -19,6 +19,30 @@ function publicAgent(agent) {
     statusSince: agent.statusSince,
     lastActivityAt: agent.lastActivityAt,
     isSubagent: agent.isSubagent,
+    context: agent.context,
+    terminals: {
+      running: agent.terminals?.running || 0,
+      fidelity: 'inferred',
+      entries: (agent.terminals?.entries || []).slice(0, 4).map((entry) => ({
+        label: String(entry.label || 'COMMAND').slice(0, 18),
+        startedAt: entry.startedAt || 0,
+      })),
+    },
+    subagents: {
+      total: agent.subagents?.total || 0,
+      active: agent.subagents?.active || 0,
+      waiting: agent.subagents?.waiting || 0,
+      done: agent.subagents?.done || 0,
+      children: (agent.subagents?.children || []).slice(0, 8).map((child) => ({
+        name: String(child.name || 'Subagent').slice(0, 24),
+        status: child.status,
+        task: String(child.task || '').slice(0, 48),
+      })),
+    },
+    activity: agent.activity,
+    plan: agent.plan,
+    permissions: agent.permissions,
+    git: agent.git,
   };
 }
 

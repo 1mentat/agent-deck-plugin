@@ -46,6 +46,23 @@ function stableAgent(agent) {
     statusSince: agent.statusSince,
     lastActivityAt: agent.lastActivityAt,
     isSubagent: agent.isSubagent,
+    context: agent.context,
+    terminals: agent.terminals,
+    subagents: {
+      total: agent.subagents?.total || 0,
+      active: agent.subagents?.active || 0,
+      waiting: agent.subagents?.waiting || 0,
+      done: agent.subagents?.done || 0,
+      children: (agent.subagents?.children || []).map((child) => ({
+        name: child.name,
+        status: child.status,
+        task: child.task,
+      })),
+    },
+    activity: agent.activity,
+    plan: agent.plan,
+    permissions: agent.permissions,
+    git: agent.git,
   };
 }
 
@@ -106,7 +123,7 @@ test('generated probe matches the direct observer on one synthetic Codex home', 
   });
   assert.equal(execution.status, 0, execution.stderr);
   const remote = JSON.parse(execution.stdout);
-  assert.equal(remote.schemaVersion, 1);
+  assert.equal(remote.schemaVersion, 2);
   assert.equal(remote.provider, 'codex');
   assert.deepEqual(remote.agents.map(stableAgent), direct.agents.map(stableAgent));
   assert.deepEqual(remote.counts, direct.counts);

@@ -3,7 +3,12 @@ import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
-import { classifyThread, rankSnapshots, summarizeSnapshots } from './classifier.js';
+import {
+  classifyThread,
+  enrichAgentRelationships,
+  rankSnapshots,
+  summarizeSnapshots,
+} from './classifier.js';
 
 const execFilePromise = promisify(nodeExecFile);
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -104,7 +109,7 @@ async function loadSqliteMetadata({ codexHome, cutoffSeconds, execFile }) {
 
   const sql = [
     'SELECT id, cwd, model, reasoning_effort, agent_nickname, agent_role,',
-    'source, updated_at, preview, rollout_path',
+    'source, updated_at, preview, rollout_path, tokens_used, git_branch, sandbox_policy, approval_mode',
     'FROM threads',
     `WHERE archived = 0 AND updated_at >= ${Math.floor(cutoffSeconds)}`,
     'ORDER BY updated_at DESC LIMIT 200;',
@@ -127,6 +132,10 @@ async function loadSqliteMetadata({ codexHome, cutoffSeconds, execFile }) {
         updatedAt: row.updated_at,
         preview: row.preview,
         sourcePath: row.rollout_path,
+        tokensUsed: row.tokens_used,
+        gitBranch: row.git_branch,
+        sandboxPolicy: row.sandbox_policy,
+        approvalMode: row.approval_mode,
       },
     ]),
   );
@@ -208,7 +217,7 @@ export function createCodexObserver({
         }
       }
 
-      const agents = rankSnapshots(snapshots);
+      const agents = rankSnapshots(enrichAgentRelationships(snapshots));
       return { agents, counts: summarizeSnapshots(agents), scannedAt, warnings };
     },
   };

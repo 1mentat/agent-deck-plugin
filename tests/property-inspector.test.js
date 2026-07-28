@@ -16,4 +16,9 @@ test('property inspector presents Scope without embedding a host default', async
   assert.match(html, /placeholder="SSH config alias"/);
   assert.match(script, /sourceMode: sourceMode\.value, sshHost: host/);
   assert.match(script, /\^\[A-Za-z0-9\]/);
+  assert.match(html, /Dashboard group/);
+  assert.match(html, /Context warning/);
+  assert.match(html, /Show sanitized task/);
+  assert.match(script, /isDashboard/);
+  assert.match(script, /settings\.dashboardRevision = Date\.now\(\)/);
 });

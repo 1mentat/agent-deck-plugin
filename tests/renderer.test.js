@@ -5,6 +5,7 @@ import {
   renderNeedsYou,
   renderOverview,
   renderRecent,
+  renderDashboardTile,
 } from '../io.github.1mentat.agentdeck.ulanziPlugin/plugin/renderer.js';
 
 function decode(value) {
@@ -23,6 +24,29 @@ const agent = {
   lastActivityAt: Date.now() - 30_000,
   isSubagent: true,
   sourceLabel: 'LOCAL',
+  context: {
+    usedTokens: 80,
+    windowTokens: 100,
+    percent: 80,
+    cumulativeTokens: 200,
+    compactions: 1,
+  },
+  terminals: {
+    running: 1,
+    fidelity: 'inferred',
+    entries: [{ label: 'NPM', startedAt: Date.now() - 5000 }],
+  },
+  subagents: {
+    total: 2,
+    active: 1,
+    waiting: 1,
+    done: 0,
+    children: [{ name: 'Ada', status: 'working', task: 'Tests' }],
+  },
+  activity: { kind: 'terminal', label: 'RUNNING COMMAND', since: Date.now() - 5000 },
+  plan: { completed: 2, total: 4, current: 'Render details' },
+  permissions: { profile: 'workspace-write', approval: 'on-request' },
+  git: { branch: 'feature/dashboard' },
 };
 
 const dashboard = {
@@ -76,4 +100,47 @@ test('an offline combined source cannot render as all clear', () => {
   );
   assert.match(document, /SSH OFFLINE/);
   assert.doesNotMatch(document, /ALL CLEAR/);
+});
+
+test('dashboard fleet and detail roles render context, inferred terminals, and child agents', () => {
+  const fleetState = { mode: 'fleet', filter: 'all', pinned: true };
+  const detailState = {
+    mode: 'detail',
+    filter: 'all',
+    pinned: true,
+    selectedAgentId: agent.id,
+    terminalCursor: 0,
+    subagentCursor: 0,
+  };
+  const context = decode(
+    renderDashboardTile({ role: { kind: 'context' }, dashboard, state: detailState }),
+  );
+  const terminals = decode(
+    renderDashboardTile({ role: { kind: 'terminals' }, dashboard, state: detailState }),
+  );
+  const subagents = decode(
+    renderDashboardTile({ role: { kind: 'subagents' }, dashboard, state: detailState }),
+  );
+  const slot = decode(
+    renderDashboardTile({ role: { kind: 'agent', rank: 1 }, dashboard, state: fleetState }),
+  );
+  assert.match(context, /80%/);
+  assert.match(context, /1 COMPACTIONS/);
+  assert.match(terminals, /1~/);
+  assert.match(terminals, /NPM/);
+  assert.match(subagents, /Ada/);
+  assert.match(slot, /Lovelace/);
+});
+
+test('dashboard privacy setting hides task text', () => {
+  const document = decode(
+    renderDashboardTile({
+      role: { kind: 'task' },
+      dashboard,
+      state: { mode: 'detail', filter: 'all', pinned: true, selectedAgentId: agent.id },
+      settings: { showTask: false },
+    }),
+  );
+  assert.match(document, /TASK HIDDEN/);
+  assert.doesNotMatch(document, /Review &amp; verify/);
 });

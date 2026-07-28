@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   classifyThread,
+  enrichAgentRelationships,
   rankSnapshots,
   summarizeSnapshots,
 } from '../io.github.1mentat.agentdeck.ulanziPlugin/plugin/classifier.js';
@@ -175,5 +176,100 @@ test('ranks needs-you work first and summarizes visible states', () => {
     quiet: 0,
     failed: 0,
     recent: 1,
+    roots: 3,
+    subagents: 0,
+    terminals: 0,
+    contextRisk: 0,
   });
+});
+
+test('extracts context, plan, permissions, activity, and inferred terminals', () => {
+  const snapshot = classifyThread({
+    metadata: { ...metadata, tokensUsed: 9000, gitBranch: 'feature/dashboard' },
+    events: [
+      event(1, 'turn_context', {
+        model: 'gpt-test',
+        effort: 'high',
+        approval_policy: 'on-request',
+        permission_profile: { type: 'workspace-write' },
+      }),
+      event(2, 'event_msg', { type: 'task_started' }),
+      event(3, 'event_msg', {
+        type: 'token_count',
+        info: {
+          last_token_usage: { input_tokens: 600, total_tokens: 650 },
+          total_token_usage: { total_tokens: 4200 },
+          model_context_window: 1000,
+        },
+      }),
+      event(4, 'event_msg', { type: 'context_compacted' }),
+      event(5, 'response_item', {
+        type: 'function_call',
+        name: 'update_plan',
+        call_id: 'plan-1',
+        arguments: JSON.stringify({
+          plan: [
+            { step: 'Parse sessions', status: 'completed' },
+            { step: 'Render tiles', status: 'in_progress' },
+          ],
+        }),
+      }),
+      event(6, 'response_item', {
+        type: 'function_call',
+        name: 'exec_command',
+        call_id: 'exec-1',
+        arguments: JSON.stringify({ cmd: 'npm test' }),
+      }),
+      event(7, 'response_item', {
+        type: 'function_call_output',
+        call_id: 'exec-1',
+        output: JSON.stringify({ session_id: 42 }),
+      }),
+    ],
+    now: BASE + 10_000,
+  });
+  assert.deepEqual(snapshot.context, {
+    usedTokens: 600,
+    windowTokens: 1000,
+    percent: 60,
+    cumulativeTokens: 4200,
+    compactions: 1,
+  });
+  assert.deepEqual(snapshot.plan, { completed: 1, total: 2, current: 'Render tiles' });
+  assert.equal(snapshot.terminals.running, 1);
+  assert.equal(snapshot.terminals.fidelity, 'inferred');
+  assert.equal(snapshot.terminals.entries[0].label, 'NPM');
+  assert.equal(snapshot.activity.label, 'RUNNING COMMAND');
+  assert.equal(snapshot.permissions.profile, 'workspace-write');
+  assert.equal(snapshot.git.branch, 'feature/dashboard');
+});
+
+test('enriches a parent with bounded child-agent status summaries', () => {
+  const parent = classifyThread({
+    metadata,
+    events: [event(1, 'event_msg', { type: 'task_started' })],
+    now: BASE + 2000,
+  });
+  const child = classifyThread({
+    metadata: {
+      ...metadata,
+      id: 'child-1',
+      source: {
+        subagent: { thread_spawn: { parent_thread_id: 'thread-1', agent_nickname: 'Ada' } },
+      },
+    },
+    events: [
+      event(1, 'event_msg', { type: 'task_started' }),
+      event(2, 'response_item', {
+        type: 'function_call',
+        name: 'request_user_input',
+        call_id: 'ask-child',
+      }),
+    ],
+    now: BASE + 3000,
+  });
+  const enriched = enrichAgentRelationships([parent, child]);
+  assert.equal(enriched[0].subagents.total, 1);
+  assert.equal(enriched[0].subagents.waiting, 1);
+  assert.equal(enriched[0].subagents.children[0].name, 'Ada');
 });

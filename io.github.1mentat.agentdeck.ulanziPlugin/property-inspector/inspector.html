@@ -48,6 +48,37 @@
           <input id="projectFilter" type="text" placeholder="e.g. ulanzi-ai" autocomplete="off" />
         </label>
       </section>
+      <section id="dashboardFields" hidden>
+        <label>
+          <span>Dashboard group</span>
+          <input id="dashboardGroup" type="text" value="main" maxlength="32" autocomplete="off" />
+        </label>
+        <label>
+          <span>Project filter <small>optional</small></span>
+          <input
+            id="dashboardProjectFilter"
+            type="text"
+            placeholder="e.g. agent-deck"
+            autocomplete="off"
+          />
+        </label>
+        <label>
+          <span>Context warning</span>
+          <select id="contextWarningPercent">
+            <option value="60">60%</option>
+            <option value="70">70%</option>
+            <option value="80">80%</option>
+            <option value="90">90%</option>
+          </select>
+        </label>
+        <label>
+          <span>Task text on keys</span>
+          <select id="showTask">
+            <option value="true">Show sanitized task</option>
+            <option value="false">Hide task text</option>
+          </select>
+        </label>
+      </section>
       <p id="help">
         The slot is read-only and follows Agent Deck’s priority order: needs you, failed, working,
         quiet, then recently completed.

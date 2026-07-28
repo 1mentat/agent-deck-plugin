@@ -12,7 +12,7 @@ const PROBE_PATH = path.join(
   'codex-remote-probe.mjs',
 );
 const SSH_PATH = '/usr/bin/ssh';
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 export function validateSshAlias(value) {
   const host = String(value || '').trim();
@@ -81,6 +81,40 @@ function normalizeEnvelope(envelope, host, receivedAt, startedAt) {
         statusSince: adjustedTimestamp(agent.statusSince, offset),
         lastActivityAt: adjustedTimestamp(agent.lastActivityAt, offset),
         isSubagent: Boolean(agent.isSubagent),
+        context: agent.context || {
+          usedTokens: 0,
+          windowTokens: 0,
+          percent: 0,
+          cumulativeTokens: 0,
+          compactions: 0,
+        },
+        terminals: {
+          running: Number(agent.terminals?.running) || 0,
+          fidelity: 'inferred',
+          entries: (agent.terminals?.entries || []).slice(0, 4).map((entry) => ({
+            label: String(entry.label || 'COMMAND').slice(0, 18),
+            startedAt: adjustedTimestamp(entry.startedAt, offset),
+          })),
+        },
+        subagents: {
+          total: Number(agent.subagents?.total) || 0,
+          active: Number(agent.subagents?.active) || 0,
+          waiting: Number(agent.subagents?.waiting) || 0,
+          done: Number(agent.subagents?.done) || 0,
+          children: (agent.subagents?.children || []).slice(0, 8).map((child) => ({
+            name: String(child.name || 'Subagent').slice(0, 24),
+            status: String(child.status || 'inactive'),
+            task: String(child.task || '').slice(0, 48),
+          })),
+        },
+        activity: {
+          kind: String(agent.activity?.kind || 'idle').slice(0, 24),
+          label: String(agent.activity?.label || 'NO RECENT TOOL').slice(0, 32),
+          since: adjustedTimestamp(agent.activity?.since, offset),
+        },
+        plan: agent.plan || { completed: 0, total: 0, current: '' },
+        permissions: agent.permissions || { approval: '', reviewer: '', profile: '', sandbox: '' },
+        git: agent.git || { branch: '' },
       };
     }),
   );
