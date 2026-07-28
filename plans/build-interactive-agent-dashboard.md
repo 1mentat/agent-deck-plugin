@@ -40,6 +40,9 @@ populates the dedicated Studio page.
       manifest and dashboard module match the repository. The manifest lists Dashboard Tile;
       restarting the already-running Studio process and placing the 13 tiles remain deliberate user
       actions.
+- [x] (2026-07-28 22:18Z) Corrected the live property inspector so an SSH alias can be entered while
+      Scope remains This Mac, added an executable inspector wiring test, and prepared patch release
+      0.2.1.
 
 ## Surprises & Discoveries
 
@@ -78,6 +81,11 @@ populates the dedicated Studio page.
   restricted run passed 38 tests and failed only with
   `listen EPERM: operation not permitted 127.0.0.1`; the permitted run passed all 39 tests.
 
+- Observation: The source model can store an SSH alias independently from the selected scope, but
+  the initial property inspector disabled the alias input whenever This Mac was selected. Evidence:
+  the live dashboard profile stored ordinary per-action source settings, while
+  `property-inspector/inspector.js` assigned `sshHost.disabled = !requiresHost`.
+
 ## Decision Log
 
 - Decision: Implement a passive detailed dashboard first and preserve an explicit fidelity marker
@@ -112,14 +120,19 @@ populates the dedicated Studio page.
   interaction model are a user-visible feature release rather than a patch to 0.1.0. Date/Author:
   2026-07-28 / Codex
 
+- Decision: Keep the SSH alias editable in every Scope mode and validate it whenever it is
+  non-empty. Rationale: This Mac does not require an alias, but users should be able to prepare one
+  before switching to SSH or All. SSH and All continue to require a valid alias. Date/Author:
+  2026-07-28 / Codex
+
 ## Outcomes & Retrospective
 
-Agent Deck 0.2.0 now implements the planned passive fleet/detail dashboard while preserving all four
-original actions and the no-control security boundary. The complete check passed 39 of 39 tests,
+Agent Deck 0.2.1 now implements the planned passive fleet/detail dashboard while preserving all four
+original actions and the no-control security boundary. The complete check passed 40 of 40 tests,
 regenerated the schema-2 remote probe, audited the production dependency with no vulnerabilities,
 and created `dist/io.github.1mentat.agentdeck.ulanziPlugin.zip` at 90 KiB. The local installer
 replaced only Agent Deck's plugin directory, and byte comparisons proved that its manifest and
-`plugin/dashboard-state.js` match the repository. The installed manifest identifies Agent Deck 0.2.0
+`plugin/dashboard-state.js` match the repository. The installed manifest identifies Agent Deck 0.2.1
 and Dashboard Tile.
 
 Ulanzi Studio was already running the pre-install process, so this implementation did not terminate
@@ -233,7 +246,7 @@ After all implementation and documentation edits:
     npm run format
     npm run check
 
-Expect formatting verification to pass, all 39 Node tests to pass, and
+Expect formatting verification to pass, all 40 Node tests to pass, and
 `dist/io.github.1mentat.agentdeck.ulanziPlugin.zip` to be recreated and validated.
 
 Install only after the complete check succeeds:
@@ -305,8 +318,8 @@ The intended detail grid is:
 
 The final verification transcript was:
 
-    tests 39
-    pass 39
+    tests 40
+    pass 40
     fail 0
     found 0 vulnerabilities
     Created dist/io.github.1mentat.agentdeck.ulanziPlugin.zip (90 KiB)
@@ -315,7 +328,7 @@ The final verification transcript was:
 The installed manifest verification found:
 
     "Name": "Agent Deck"
-    "Version": "0.2.0"
+    "Version": "0.2.1"
     "Name": "Dashboard Tile"
 
 ## Interfaces and Dependencies
@@ -348,3 +361,6 @@ Plan revision note, 2026-07-28: Recorded the completed normalized detail model, 
 interaction and rendering work, settings-revision safeguard, schema-2 SSH parity, 0.2.0 release
 version, full test/package evidence, privacy scan, and local installation outcome so the plan
 remains a complete restart and audit record.
+
+Plan revision note, 2026-07-28: Recorded the live property-inspector discovery and 0.2.1 correction
+that decouples SSH alias entry from the active Scope selection.

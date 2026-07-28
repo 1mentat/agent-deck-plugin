@@ -3,7 +3,7 @@
   "Name": "Agent Deck",
   "Description": "A read-only mission control view of local and SSH-hosted Codex threads, subagents, reasoning effort, recent completions, and requests that need you.",
   "Author": "James Burns",
-  "Version": "0.2.0",
+  "Version": "0.2.1",
   "Icon": "resources/plugin.svg",
   "Category": "Developer Tools",
   "CategoryIcon": "resources/plugin.svg",

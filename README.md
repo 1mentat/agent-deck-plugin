@@ -51,6 +51,9 @@ Each action's property inspector has a **Scope** setting:
 - **Host via SSH** observes one OpenSSH `Host` alias.
 - **All sources** combines this Mac with that configured alias.
 
+The SSH alias remains editable in **This Mac** mode so a host can be prepared before changing Scope.
+A valid alias is required only when **Host via SSH** or **All sources** is selected.
+
 Before entering an SSH alias in Studio, establish its host key and credentials in a terminal and
 confirm that non-interactive Node.js is available:
 

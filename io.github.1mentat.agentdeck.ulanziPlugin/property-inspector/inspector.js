@@ -42,15 +42,15 @@
   }
 
   function updateHostState() {
-    const requiresHost = sourceMode.value !== 'local';
-    sshHost.disabled = !requiresHost;
+    sshHost.disabled = false;
     sshError.hidden = true;
   }
 
   function save() {
     if (!loaded) return;
     const host = sshHost.value.trim();
-    if (sourceMode.value !== 'local' && !hostPattern.test(host)) {
+    const requiresHost = sourceMode.value !== 'local';
+    if ((requiresHost || host) && !hostPattern.test(host)) {
       sshError.textContent =
         'Enter one SSH config alias using letters, numbers, dot, dash, or underscore.';
       sshError.hidden = false;
