@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>Agent Deck</title>
+    <link rel="stylesheet" href="inspector.css" />
+  </head>
+  <body>
+    <main id="panel" hidden>
+      <h1 id="title">Agent Deck</h1>
+      <label>
+        <span>Scope</span>
+        <select id="sourceMode">
+          <option value="local_and_ssh">All sources</option>
+          <option value="local">This Mac</option>
+          <option value="ssh">Host via SSH</option>
+        </select>
+      </label>
+      <label>
+        <span>SSH config alias</span>
+        <input id="sshHost" type="text" placeholder="SSH config alias" autocomplete="off" />
+        <small id="sshError" class="error" hidden></small>
+      </label>
+      <section id="agentFields" hidden>
+        <label>
+          <span>Ranked position</span>
+          <select id="slot">
+            <option value="1">1 — highest priority</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+          </select>
+        </label>
+        <label>
+          <span>Project filter <small>optional</small></span>
+          <input id="projectFilter" type="text" placeholder="e.g. ulanzi-ai" autocomplete="off" />
+        </label>
+      </section>
+      <p id="help">
+        The slot is read-only and follows Agent Deck’s priority order: needs you, failed, working,
+        quiet, then recently completed.
+      </p>
+    </main>
+    <script src="pi-api.js"></script>
+    <script src="inspector.js"></script>
+  </body>
+</html>

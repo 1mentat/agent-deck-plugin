@@ -1,0 +1,5 @@
+dist/
+node_modules/
+io.github.1mentat.agentdeck.ulanziPlugin/node_modules/
+io.github.1mentat.agentdeck.ulanziPlugin/package-lock.json
+io.github.1mentat.agentdeck.ulanziPlugin/generated/

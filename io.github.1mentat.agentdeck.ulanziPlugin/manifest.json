@@ -1,0 +1,58 @@
+{
+  "UUID": "io.github.1mentat.agentdeck.ulanzi",
+  "Name": "Agent Deck",
+  "Description": "A read-only mission control view of local and SSH-hosted Codex threads, subagents, reasoning effort, recent completions, and requests that need you.",
+  "Author": "James Burns",
+  "Version": "0.1.0",
+  "Icon": "resources/plugin.svg",
+  "Category": "Developer Tools",
+  "CategoryIcon": "resources/plugin.svg",
+  "CodePath": "plugin/app.js",
+  "Type": "JavaScript",
+  "PrivateAPI": true,
+  "SupportedInMultiActions": false,
+  "Actions": [
+    {
+      "Name": "Overview",
+      "Tooltip": "Counts active, waiting, and recently completed Codex work.",
+      "Icon": "resources/overview.svg",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "io.github.1mentat.agentdeck.ulanzi.overview",
+      "States": [{ "Image": "resources/overview.svg" }],
+      "SupportedInMultiActions": false,
+      "Controllers": ["Keypad"]
+    },
+    {
+      "Name": "Needs You",
+      "Tooltip": "Shows the highest-priority Codex thread waiting for input or approval.",
+      "Icon": "resources/needs-you.svg",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "io.github.1mentat.agentdeck.ulanzi.needsyou",
+      "States": [{ "Image": "resources/needs-you.svg" }],
+      "SupportedInMultiActions": false,
+      "Controllers": ["Keypad"]
+    },
+    {
+      "Name": "Agent Slot",
+      "Tooltip": "Shows one dynamically ranked Codex agent or subagent.",
+      "Icon": "resources/agent.svg",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "io.github.1mentat.agentdeck.ulanzi.agentslot",
+      "States": [{ "Image": "resources/agent.svg" }],
+      "SupportedInMultiActions": false,
+      "Controllers": ["Keypad"]
+    },
+    {
+      "Name": "Recent Completion",
+      "Tooltip": "Shows the most recently completed Codex task.",
+      "Icon": "resources/recent.svg",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "io.github.1mentat.agentdeck.ulanzi.recent",
+      "States": [{ "Image": "resources/recent.svg" }],
+      "SupportedInMultiActions": false,
+      "Controllers": ["Keypad"]
+    }
+  ],
+  "OS": [{ "Platform": "mac", "MinimumVersion": "10.15" }],
+  "Software": { "MinVersion": "3.0.11" }
+}

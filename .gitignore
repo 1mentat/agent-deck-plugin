@@ -1,0 +1,6 @@
+dist/
+node_modules/
+io.github.1mentat.agentdeck.ulanziPlugin/node_modules/
+.DS_Store
+*.log
+*.swp
