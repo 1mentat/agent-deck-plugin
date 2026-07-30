@@ -98,6 +98,10 @@ In detail mode, Terminals and Subagents cycle their bounded entries. Previous an
 another visible agent, Pin/Follow chooses stable identity versus following the selected rank, and
 Back returns to fleet mode. These presses change only Agent Deck's local display state.
 
+The Scope tile footer reports the selected source's health. `SYNC 5s AGO` means its most recent
+probe succeeded five seconds ago; scanning, timeout, and offline labels remain visible until a later
+probe recovers.
+
 The Context tile shows the latest recorded model request's input tokens divided by its context
 window. This is intentionally different from cumulative token usage across the thread. Terminal
 counts carry a trailing `~` because passive Codex logs can prove that Agent Deck observed a running
@@ -127,6 +131,18 @@ zero-configuration default.
 Context usage, compaction events, parent-child relationships, model, effort, permissions, branch,
 and persisted plan/tool activity are recorded session facts but can be delayed by the normal poll
 interval. Background-terminal liveness remains inferred in passive mode and is marked with `~`.
+
+## Troubleshooting
+
+Agent Deck records bounded runtime events at `~/Library/Logs/Agent Deck/runtime.jsonl`. To watch
+connection transitions while reproducing a problem:
+
+    tail -f ~/Library/Logs/Agent\ Deck/runtime.jsonl
+
+The log records plugin socket lifecycle plus SSH offline, retry, and recovery transitions. It
+rotates at 256 KiB and keeps one previous file as `runtime.jsonl.1`. Records contain only event
+names, timestamps, source kind, stable error codes, durations, and counts. SSH aliases, hostnames,
+commands, output, paths, prompts, and session identifiers are never logged.
 
 ## License
 

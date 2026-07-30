@@ -379,6 +379,17 @@ function textTile(title, headline, lines = [], color = STATUS.working.color) {
   );
 }
 
+function scopeFooter(dashboard, mode, now) {
+  const wantsSsh = mode === 'ssh' || mode === 'local_and_ssh';
+  const source = dashboard?.sources?.find((item) => item.kind === (wantsSsh ? 'ssh' : 'local'));
+  if (!source) return wantsSsh ? 'SET SSH HOST' : 'WAITING FOR SCAN';
+  if (source.status === 'pending') return wantsSsh ? 'SSH SCANNING' : 'SCANNING';
+  if (source.status === 'offline') {
+    return SOURCE_ERROR_LABELS[source.errorCode] || (wantsSsh ? 'SSH OFFLINE' : 'OFFLINE');
+  }
+  return source.lastSuccessAt ? `SYNC ${formatAge(source.lastSuccessAt, now)} AGO` : 'SYNCED';
+}
+
 export function renderDashboardTile({ role, dashboard, state, settings = {}, now } = {}) {
   const currentTime = now || dashboard?.scannedAt || Date.now();
   const agent = selectedDashboardAgent(dashboard, state);
@@ -420,7 +431,10 @@ export function renderDashboardTile({ role, dashboard, state, settings = {}, now
     if (role.kind === 'scope') {
       const mode = state?.sourceModeOverride || settings.sourceMode || 'local';
       const label = mode === 'local_and_ssh' ? 'ALL' : mode === 'ssh' ? 'SSH' : 'LOCAL';
-      return metricTile('SCOPE', label, 'TAP TO CHANGE', '#9b7cff', { valueSize: 39 });
+      return metricTile('SCOPE', label, 'TAP TO CHANGE', '#9b7cff', {
+        valueSize: 39,
+        footer: scopeFooter(dashboard, mode, currentTime),
+      });
     }
   }
 

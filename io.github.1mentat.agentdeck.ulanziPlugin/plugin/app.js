@@ -17,6 +17,7 @@ import {
 import { normalizeSourceSettings } from './source-config.js';
 import { createSourceCoordinator } from './source-coordinator.js';
 import { createSshCodexSource } from './ssh-codex-source.js';
+import { createRuntimeLogger } from './runtime-logger.js';
 import UlanziApi from './ulanzi-api.js';
 
 const PLUGIN_UUID = 'io.github.1mentat.agentdeck.ulanzi';
@@ -30,9 +31,11 @@ const ACTIONS = Object.freeze({
 const POLL_MS = 2500;
 
 const api = new UlanziApi();
+const runtimeLogger = createRuntimeLogger();
 const coordinator = createSourceCoordinator({
   localSource: createCodexObserver(),
   sshSourceFactory: (hostAlias) => createSshCodexSource({ hostAlias }),
+  onSourceEvent: (event, details) => runtimeLogger.log(event, details),
 });
 const instances = new Map();
 const dashboardStates = new Map();
@@ -193,6 +196,7 @@ async function refresh() {
     .refresh()
     .then(renderAll)
     .catch((error) => {
+      runtimeLogger.log('refresh_failed', { errorCode: error?.code || error?.name });
       console.error('[agent-deck] scan failed', error);
     });
 }
@@ -243,8 +247,12 @@ function ensureInstance(message) {
   return instance;
 }
 
+runtimeLogger.log('plugin_started');
 api.connect(PLUGIN_UUID);
-api.onConnected(() => console.log('[agent-deck] connected'));
+api.onConnected(() => {
+  runtimeLogger.log('plugin_connected');
+  console.log('[agent-deck] connected');
+});
 api.onAdd((message) => ensureInstance(message));
 api.onParamFromApp((message) => {
   renderInstance(ensureInstance(message));
@@ -328,5 +336,11 @@ api.onClear((message) => {
   }
   updatePolling();
 });
-api.on('error', (error) => console.error('[agent-deck] socket error', error));
-api.on('close', () => console.log('[agent-deck] socket closed'));
+api.on('error', (error) => {
+  runtimeLogger.log('plugin_socket_error', { errorCode: error?.code || error?.name });
+  console.error('[agent-deck] socket error', error);
+});
+api.on('close', () => {
+  runtimeLogger.log('plugin_socket_closed');
+  console.log('[agent-deck] socket closed');
+});

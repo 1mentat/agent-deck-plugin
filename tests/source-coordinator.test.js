@@ -136,3 +136,48 @@ test('continues local scans while an SSH scan is still in flight', async () => {
   resolveRemote(dashboard([], currentTime));
   await Promise.all([firstRefresh, secondRefresh]);
 });
+
+test('retries a failed SSH source and emits a privacy-safe recovery sequence', async () => {
+  let currentTime = 1000;
+  let attempts = 0;
+  const events = [];
+  const timeout = Object.assign(new Error('private transport detail'), { code: 'SSH_TIMEOUT' });
+  const coordinator = createSourceCoordinator({
+    localSource: { scan: async () => dashboard([]) },
+    sshSourceFactory: () => ({
+      async scan() {
+        attempts += 1;
+        if (attempts === 1) throw timeout;
+        return dashboard([agent('recovered', 'working', 'ssh:fixture-host')], currentTime);
+      },
+    }),
+    onSourceEvent(event, details) {
+      events.push({ event, ...details });
+    },
+    now: () => currentTime,
+    sshPollMs: 10,
+  });
+  const settings = { sourceMode: 'ssh', sshHost: 'fixture-host' };
+  coordinator.setAction('remote', settings, true);
+
+  await coordinator.refresh();
+  assert.equal(coordinator.dashboardFor(settings).offlineSources[0].errorCode, 'SSH_TIMEOUT');
+  currentTime += 11;
+  await coordinator.refresh();
+
+  assert.equal(attempts, 2);
+  assert.equal(coordinator.dashboardFor(settings).agents[0].status, 'working');
+  assert.deepEqual(events, [
+    { event: 'source_offline', sourceKind: 'ssh', errorCode: 'SSH_TIMEOUT', durationMs: 0 },
+    { event: 'source_retry', sourceKind: 'ssh', previousErrorCode: 'SSH_TIMEOUT' },
+    {
+      event: 'source_online',
+      sourceKind: 'ssh',
+      durationMs: 0,
+      agentCount: 1,
+      warningCount: 0,
+      recovered: true,
+    },
+  ]);
+  assert.doesNotMatch(JSON.stringify(events), /fixture-host|private transport detail/);
+});

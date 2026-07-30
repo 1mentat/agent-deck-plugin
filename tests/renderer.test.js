@@ -144,3 +144,39 @@ test('dashboard privacy setting hides task text', () => {
   assert.match(document, /TASK HIDDEN/);
   assert.doesNotMatch(document, /Review &amp; verify/);
 });
+
+test('scope tile shows SSH sync age and offline health without exposing the host', () => {
+  const now = Date.now();
+  const state = { mode: 'fleet', filter: 'all', sourceModeOverride: null };
+  const settings = { sourceMode: 'local_and_ssh', sshHost: 'private-host' };
+  const online = decode(
+    renderDashboardTile({
+      role: { kind: 'scope' },
+      dashboard: {
+        ...dashboard,
+        scannedAt: now,
+        sources: [{ kind: 'ssh', status: 'online', lastSuccessAt: now - 5000 }],
+      },
+      state,
+      settings,
+      now,
+    }),
+  );
+  assert.match(online, /SYNC 5s AGO/);
+  assert.doesNotMatch(online, /private-host/);
+
+  const offline = decode(
+    renderDashboardTile({
+      role: { kind: 'scope' },
+      dashboard: {
+        ...dashboard,
+        scannedAt: now,
+        sources: [{ kind: 'ssh', status: 'offline', errorCode: 'SSH_TIMEOUT' }],
+      },
+      state,
+      settings,
+      now,
+    }),
+  );
+  assert.match(offline, /SSH TIMEOUT/);
+});

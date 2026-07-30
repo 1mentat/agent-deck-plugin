@@ -24,6 +24,12 @@ active Dashboard Tile instances share that state in `plugin/app.js`; one press r
 visible group. The property inspector propagates the last configured visible tile's settings to the
 rest of the group through Ulanzi's ordinary per-action settings API.
 
+`plugin/runtime-logger.js` writes a bounded JSON Lines diagnostic log under the user's standard
+macOS Logs directory. Its event-specific allowlist accepts lifecycle state, error codes, durations,
+and counts only. Source labels, aliases, paths, commands, output, prompts, and session identifiers
+cannot cross this logging boundary. The source coordinator emits SSH transition events through an
+injected callback so its domain logic remains independent from filesystem logging.
+
 `plugin/ssh-codex-source.js` starts the fixed system SSH executable in batch mode and streams
 `generated/codex-remote-probe.mjs` to remote Node.js. The probe bundles the same observer and
 classifier, writes no remote files, and returns one bounded protocol response. The coordinator
@@ -48,6 +54,7 @@ position rather than pinning a thread identifier.
 | `plugin/remote-probe-entry.js`                           | Allowlisted, versioned output from one remote observer scan                                 |
 | `generated/codex-remote-probe.mjs`                       | Build-generated single-file probe streamed to remote Node.js                                |
 | `plugin/renderer.js`                                     | Escaped 200-by-200 SVG key images                                                           |
+| `plugin/runtime-logger.js`                               | Rotated, allowlisted local lifecycle and source-health diagnostics                          |
 | `plugin/ulanzi-api.js`                                   | Ulanzi WebSocket messages and context encoding                                              |
 | `plugin/app.js`                                          | Action lifecycle, shared polling, settings, filtering, and refresh                          |
 | `property-inspector/`                                    | Source settings plus Agent Slot and coordinated Dashboard Tile configuration                |

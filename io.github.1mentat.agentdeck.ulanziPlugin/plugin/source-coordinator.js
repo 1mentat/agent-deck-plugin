@@ -38,6 +38,7 @@ function errorCode(error) {
 export function createSourceCoordinator({
   localSource,
   sshSourceFactory,
+  onSourceEvent = () => {},
   now = () => Date.now(),
   localPollMs = 2500,
   sshPollMs = 15_000,
@@ -47,6 +48,15 @@ export function createSourceCoordinator({
   const sources = new Map([
     ['local', sourceRecord({ id: 'local', kind: 'local', label: 'LOCAL', adapter: localSource })],
   ]);
+
+  function emitSourceEvent(event, record, details = {}) {
+    if (record.kind !== 'ssh') return;
+    try {
+      onSourceEvent(event, { sourceKind: record.kind, ...details });
+    } catch {
+      // Diagnostics must never interrupt observation.
+    }
+  }
 
   function setAction(context, settings = {}, active = true) {
     actions.set(context, { settings: normalizeSourceSettings(settings), active: Boolean(active) });
@@ -89,7 +99,12 @@ export function createSourceCoordinator({
     const attemptAt = now();
     if (record.lastAttemptAt && attemptAt - record.lastAttemptAt < interval)
       return record.dashboard;
+    const previousStatus = record.health.status;
+    const previousErrorCode = record.health.errorCode;
     record.lastAttemptAt = attemptAt;
+    if (previousStatus === 'offline') {
+      emitSourceEvent('source_retry', record, { previousErrorCode });
+    }
     record.inFlight = Promise.resolve()
       .then(() => record.adapter.scan())
       .then((dashboard) => {
@@ -103,19 +118,34 @@ export function createSourceCoordinator({
           scannedAt: dashboard.scannedAt || now(),
           lastSuccessAt: dashboard.scannedAt || now(),
         };
+        if (previousStatus !== 'online') {
+          emitSourceEvent('source_online', record, {
+            durationMs: now() - attemptAt,
+            agentCount: dashboard.agents?.length || 0,
+            warningCount: dashboard.warnings?.length || 0,
+            recovered: previousStatus === 'offline',
+          });
+        }
         return dashboard;
       })
       .catch((error) => {
+        const nextErrorCode = errorCode(error);
         record.dashboard = null;
         record.health = {
           id: record.id,
           kind: record.kind,
           label: record.label,
           status: 'offline',
-          errorCode: errorCode(error),
+          errorCode: nextErrorCode,
           scannedAt: now(),
           lastSuccessAt: record.health.lastSuccessAt || 0,
         };
+        if (previousStatus !== 'offline' || previousErrorCode !== nextErrorCode) {
+          emitSourceEvent('source_offline', record, {
+            errorCode: nextErrorCode,
+            durationMs: now() - attemptAt,
+          });
+        }
         return null;
       })
       .finally(() => {

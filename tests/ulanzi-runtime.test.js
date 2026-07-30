@@ -55,7 +55,11 @@ test(
     );
     const child = spawn(node, ['plugin/app.js', '127.0.0.1', String(port), 'en'], {
       cwd: pluginDir,
-      env: { ...process.env, CODEX_HOME: codexHome },
+      env: {
+        ...process.env,
+        CODEX_HOME: codexHome,
+        AGENT_DECK_LOG_PATH: path.join(codexHome, 'runtime.jsonl'),
+      },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
     let stderr = '';

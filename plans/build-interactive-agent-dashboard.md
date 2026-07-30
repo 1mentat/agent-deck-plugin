@@ -43,6 +43,18 @@ populates the dedicated Studio page.
 - [x] (2026-07-28 22:18Z) Corrected the live property inspector so an SSH alias can be entered while
       Scope remains This Mac, added an executable inspector wiring test, and prepared patch release
       0.2.1.
+- [x] (2026-07-30 17:39Z) Diagnosed the reported post-sleep stall against the live Studio process:
+      the plugin and WebSocket remained connected, no SSH child was stuck, and a fresh configured
+      probe succeeded in 1.6 seconds.
+- [x] (2026-07-30 17:39Z) Added allowlisted, rotated runtime diagnostics, a source-health footer on
+      Scope, and a synthetic SSH failure-to-recovery sequence for patch release 0.2.2.
+- [x] (2026-07-30 17:39Z) Ran the complete check: all 44 tests passed, dependency audit reported no
+      vulnerabilities, and the validated package is 92 KiB.
+- [x] (2026-07-30 17:39Z) Installed 0.2.2 and verified that the installed manifest and runtime
+      logger match the repository and that the logger is present in the distributable.
+- [ ] Restart Studio and verify that the runtime log records startup plus an initial source
+      transition without exposing the configured alias. The attempted automated quit was canceled,
+      so the existing Studio process remains untouched.
 
 ## Surprises & Discoveries
 
@@ -86,6 +98,12 @@ populates the dedicated Studio page.
   the live dashboard profile stored ordinary per-action source settings, while
   `property-inspector/inspector.js` assigned `sshHost.disabled = !requiresHost`.
 
+- Observation: Ordinary SSH failure recovery existed but had no durable transition logs and no
+  focused failure-to-success test. Studio's proprietary daily log exposed no useful Agent Deck
+  records. Evidence: during the live incident, the long-running plugin process and loopback socket
+  were healthy, no child SSH process remained, and a direct configured probe returned 78 agents;
+  only code inspection established the 8-second timeout and 15-second retry cadence.
+
 ## Decision Log
 
 - Decision: Implement a passive detailed dashboard first and preserve an explicit fidelity marker
@@ -125,15 +143,27 @@ populates the dedicated Studio page.
   before switching to SSH or All. SSH and All continue to require a valid alias. Date/Author:
   2026-07-28 / Codex
 
+- Decision: Persist source and socket transitions in a 256 KiB JSON Lines log with one rotated
+  backup, and display selected-source freshness on the Scope tile. Rationale: A visible sync age
+  distinguishes stale data from a responsive dashboard, while durable retry and recovery events make
+  sleep/wake incidents diagnosable. The logger accepts only event-specific error codes, durations,
+  booleans, and counts; it cannot write aliases or session-derived text. Date/Author: 2026-07-30 /
+  Codex
+
 ## Outcomes & Retrospective
 
-Agent Deck 0.2.1 now implements the planned passive fleet/detail dashboard while preserving all four
-original actions and the no-control security boundary. The complete check passed 40 of 40 tests,
+Agent Deck 0.2.2 now implements the planned passive fleet/detail dashboard while preserving all four
+original actions and the no-control security boundary. The complete check passed 44 of 44 tests,
 regenerated the schema-2 remote probe, audited the production dependency with no vulnerabilities,
-and created `dist/io.github.1mentat.agentdeck.ulanziPlugin.zip` at 90 KiB. The local installer
+and created `dist/io.github.1mentat.agentdeck.ulanziPlugin.zip` at 92 KiB. The local installer
 replaced only Agent Deck's plugin directory, and byte comparisons proved that its manifest and
-`plugin/dashboard-state.js` match the repository. The installed manifest identifies Agent Deck 0.2.1
-and Dashboard Tile.
+`plugin/dashboard-state.js` match the repository. Patch 0.2.2 adds an allowlisted, rotated runtime
+log, a visible source-sync age, and explicit failure-to-recovery coverage without changing the
+read-only observation boundary.
+
+The 0.2.2 files are installed, but Ulanzi Studio declined the automated quit request and continues
+running the previous in-memory plugin process. A user-initiated Studio restart remains necessary
+before the Scope freshness footer and durable runtime log can be verified on the live device.
 
 Ulanzi Studio was already running the pre-install process, so this implementation did not terminate
 or relaunch it. The user must restart Studio once, create or choose the dedicated page, and place
@@ -246,7 +276,7 @@ After all implementation and documentation edits:
     npm run format
     npm run check
 
-Expect formatting verification to pass, all 40 Node tests to pass, and
+Expect formatting verification to pass, all 44 Node tests to pass, and
 `dist/io.github.1mentat.agentdeck.ulanziPlugin.zip` to be recreated and validated.
 
 Install only after the complete check succeeds:
@@ -318,17 +348,17 @@ The intended detail grid is:
 
 The final verification transcript was:
 
-    tests 40
-    pass 40
+    tests 44
+    pass 44
     fail 0
     found 0 vulnerabilities
-    Created dist/io.github.1mentat.agentdeck.ulanziPlugin.zip (90 KiB)
+    Created dist/io.github.1mentat.agentdeck.ulanziPlugin.zip (92 KiB)
     Agent Deck checks passed.
 
 The installed manifest verification found:
 
     "Name": "Agent Deck"
-    "Version": "0.2.1"
+    "Version": "0.2.2"
     "Name": "Dashboard Tile"
 
 ## Interfaces and Dependencies
@@ -364,3 +394,6 @@ remains a complete restart and audit record.
 
 Plan revision note, 2026-07-28: Recorded the live property-inspector discovery and 0.2.1 correction
 that decouples SSH alias entry from the active Scope selection.
+
+Plan revision note, 2026-07-30: Recorded live post-sleep diagnosis, privacy-safe runtime logging,
+the Scope freshness indicator, explicit SSH recovery coverage, and 0.2.2 package evidence.
